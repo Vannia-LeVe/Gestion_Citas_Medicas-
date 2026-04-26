@@ -3,33 +3,49 @@
  */
 
 package mx.itson.gestioncitasmedicas;
+
 import mx.itson.gestioncitasmedicas.model.*;
 import mx.itson.gestioncitasmedicas.service.*;
 import java.io.File;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.*;
+import java.util.List;
+import java.util.Scanner;
 /**
  *
  * @author Vanni
  */
+
+
 public class Main {
-    
-    // Dependencias ahora declaradas como interfaces (DIP cumplido)
+
     private static IGestorCitas citaService = new CitaService();
     private static IReporte reporteService = new ReporteService();
     private static IExportador exportador = new ExportadorPDF();
-    
-    private static List<Paciente> pacientes = new ArrayList<>();
-    private static List<Medico> medicos = new ArrayList<>();
     private static String ultimoReporte = "";
-    
+    private static String usuarioActual = "";
+
     public static void main(String[] args) {
-        inicializarDatos();
-        
         Scanner scanner = new Scanner(System.in);
-        int opcion;
         
+        // --- LOGIN ---
+        System.out.println("=== INICIO DE SESIÓN ===");
+        boolean autenticado = false;
+        while (!autenticado) {
+            System.out.print("Usuario: ");
+            String user = scanner.nextLine();
+            System.out.print("Contraseña: ");
+            String pass = scanner.nextLine();
+            
+            if (AutenticacionService.login(user, pass)) {
+                usuarioActual = user;
+                autenticado = true;
+                System.out.println("Bienvenido " + user + "\n");
+            } else {
+                System.out.println("Credenciales incorrectas. Intente de nuevo.\n");
+            }
+        }
+        
+        // --- MENÚ---
+        int opcion;
         do {
             System.out.println("\n=== SISTEMA DE CITAS MÉDICAS ===");
             System.out.println("1. Generar reporte");
@@ -43,41 +59,12 @@ public class Main {
             switch(opcion) {
                 case 1: generarReporte(scanner); break;
                 case 2: exportarPDF(scanner); break;
-                case 0: System.out.println("¡Hasta luego!"); break;
+                case 0: System.out.println("¡Hasta luego, " + usuarioActual + "!"); break;
                 default: System.out.println("Opción inválida");
             }
         } while(opcion != 0);
-    }
-    
-    private static void inicializarDatos() {
-        Especialidad cardiologia = new Especialidad("Cardiología", "Enfermedades del corazón");
-        Especialidad pediatria = new Especialidad("Pediatría", "Atención infantil");
-        Especialidad dermatologia = new Especialidad("Dermatología", "Enfermedades de la piel");
         
-        medicos.add(new Medico("Carlos García", "Cardiología"));
-        medicos.add(new Medico("Ana López", "Pediatría"));
-        medicos.add(new Medico("Laura Martínez", "Dermatología"));
-        
-        pacientes.add(new Paciente("María González", 30, "5512345678"));
-        pacientes.add(new Paciente("Juan Pérez", 25, "5523456789"));
-        pacientes.add(new Paciente("Luis Niño", 8, "5534567890"));
-        
-        Cita cita1 = new Cita(
-            LocalDate.now().plusDays(1),
-            LocalTime.of(9, 0),
-            pacientes.get(0),
-            medicos.get(0)
-        );
-        citaService.programarCita(cita1);
-        
-        Cita cita2 = new Cita(
-            LocalDate.now().plusDays(2),
-            LocalTime.of(11, 30),
-            pacientes.get(2),
-            medicos.get(1)
-        );
-        citaService.programarCita(cita2);
-        citaService.confirmarCita(1);  // confirmar la segunda cita (índice 1)
+        scanner.close();
     }
     
     private static void generarReporte(Scanner scanner) {
@@ -143,3 +130,5 @@ public class Main {
         }
     }
 }
+    
+ 
