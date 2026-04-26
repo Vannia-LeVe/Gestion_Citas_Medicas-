@@ -18,12 +18,17 @@
     </properties>
     
     <dependencies>
-        <!-- iText 7 Core -->
+        <!-- iText 7 Core  no le muevan a la versión porque es la que es más estable para la exportación del pdf-->
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>itext7-core</artifactId>
             <version>7.2.5</version>
             <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.33</version>
         </dependency>
     </dependencies>
     
