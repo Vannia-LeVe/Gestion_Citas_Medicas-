@@ -5,88 +5,169 @@
 package mx.itson.gestioncitasmedicas.service;
 
 import mx.itson.gestioncitasmedicas.model.*;
+import mx.itson.gestioncitasmedicas.db.DatabaseConnection;
+import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 /**
  *
  * @author Vanni
  */
 
+public class CitaService implements IGestorCitas {
 
-
-public class CitaService implements IGestorCitas{
-    private List<Cita> citas = new ArrayList<>();
-    private List<Horario> horariosMedicos = new ArrayList<>();
-
-    public void agregarHorarioMedico(Horario horario) {
-        horariosMedicos.add(horario);
-    }
-
-    public boolean programarCita(Cita cita) {
-        // Validar que la fecha no sea pasada
-        if (cita.getFecha().isBefore(LocalDate.now())) {
-            return false;
-        }
-        
-        // Validar que no haya otra cita a la misma hora con el mismo médico
-        boolean conflicto = citas.stream().anyMatch(c -> 
-            c.getMedico().equals(cita.getMedico()) &&
-            c.getFecha().equals(cita.getFecha()) &&
-            c.getHora().equals(cita.getHora())
-        );
-        
-        if (conflicto) {
-            return false;
-        }
-        
-        citas.add(cita);
-        cita.getPaciente().agendarCita();
-        return true;
-    }
-
-    public boolean confirmarCita(int indice) {
-        if (indice >= 0 && indice < citas.size()) {
-            citas.get(indice).confirmar();
-            return true;
-        }
-        return false;
-    }
-
-    public boolean cancelarCita(int indice) {
-        if (indice >= 0 && indice < citas.size()) {
-            citas.remove(indice);
-            return true;
-        }
-        return false;
-    }
-
+    // ----- CONSULTAS -----
     public List<Cita> getTodas() {
-        return new ArrayList<>(citas);
+        List<Cita> citas = new ArrayList<>();
+        String sql = "SELECT c.fecha, c.hora, c.confirmada, " +
+                     "p.nombre AS paciente_nombre, p.edad, p.telefono, " +
+                     "m.nombre AS medico_nombre, e.nombre AS especialidad_nombre " +
+                     "FROM cita c " +
+                     "JOIN paciente p ON c.paciente_id = p.id " +
+                     "JOIN medico m ON c.medico_id = m.id " +
+                     "JOIN especialidad e ON m.especialidad_id = e.id";
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                citas.add(mapResultSetToCita(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return citas;
     }
 
+    @Override
     public List<Cita> filtrarPorEspecialidad(String especialidad) {
-        return citas.stream()
-            .filter(c -> c.getMedico().getEspecialidad().equalsIgnoreCase(especialidad))
-            .collect(Collectors.toList());
+        List<Cita> citas = new ArrayList<>();
+        String sql = "SELECT c.fecha, c.hora, c.confirmada, " +
+                     "p.nombre AS paciente_nombre, p.edad, p.telefono, " +
+                     "m.nombre AS medico_nombre, e.nombre AS especialidad_nombre " +
+                     "FROM cita c " +
+                     "JOIN paciente p ON c.paciente_id = p.id " +
+                     "JOIN medico m ON c.medico_id = m.id " +
+                     "JOIN especialidad e ON m.especialidad_id = e.id " +
+                     "WHERE e.nombre = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, especialidad);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                citas.add(mapResultSetToCita(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return citas;
     }
 
+    @Override
     public List<Cita> filtrarPorMedico(String nombreMedico) {
-        return citas.stream()
-            .filter(c -> c.getMedico().getNombre().equalsIgnoreCase(nombreMedico))
-            .collect(Collectors.toList());
+        List<Cita> citas = new ArrayList<>();
+        String sql = "SELECT c.fecha, c.hora, c.confirmada, " +
+                     "p.nombre AS paciente_nombre, p.edad, p.telefono, " +
+                     "m.nombre AS medico_nombre, e.nombre AS especialidad_nombre " +
+                     "FROM cita c " +
+                     "JOIN paciente p ON c.paciente_id = p.id " +
+                     "JOIN medico m ON c.medico_id = m.id " +
+                     "JOIN especialidad e ON m.especialidad_id = e.id " +
+                     "WHERE m.nombre = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, nombreMedico);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                citas.add(mapResultSetToCita(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return citas;
     }
 
+    @Override
     public List<Cita> filtrarPorPaciente(String nombrePaciente) {
-        return citas.stream()
-            .filter(c -> c.getPaciente().getNombre().equalsIgnoreCase(nombrePaciente))
-            .collect(Collectors.toList());
+        List<Cita> citas = new ArrayList<>();
+        String sql = "SELECT c.fecha, c.hora, c.confirmada, " +
+                     "p.nombre AS paciente_nombre, p.edad, p.telefono, " +
+                     "m.nombre AS medico_nombre, e.nombre AS especialidad_nombre " +
+                     "FROM cita c " +
+                     "JOIN paciente p ON c.paciente_id = p.id " +
+                     "JOIN medico m ON c.medico_id = m.id " +
+                     "JOIN especialidad e ON m.especialidad_id = e.id " +
+                     "WHERE p.nombre = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, nombrePaciente);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                citas.add(mapResultSetToCita(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return citas;
     }
 
+    @Override
     public List<Cita> filtrarPorFecha(LocalDate fecha) {
-        return citas.stream()
-            .filter(c -> c.getFecha().equals(fecha))
-            .collect(Collectors.toList());
+        List<Cita> citas = new ArrayList<>();
+        String sql = "SELECT c.fecha, c.hora, c.confirmada, " +
+                     "p.nombre AS paciente_nombre, p.edad, p.telefono, " +
+                     "m.nombre AS medico_nombre, e.nombre AS especialidad_nombre " +
+                     "FROM cita c " +
+                     "JOIN paciente p ON c.paciente_id = p.id " +
+                     "JOIN medico m ON c.medico_id = m.id " +
+                     "JOIN especialidad e ON m.especialidad_id = e.id " +
+                     "WHERE c.fecha = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setDate(1, Date.valueOf(fecha));
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                citas.add(mapResultSetToCita(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return citas;
     }
+        private Cita mapResultSetToCita(ResultSet rs) throws SQLException {
+        Paciente paciente = new Paciente(
+            rs.getString("paciente_nombre"),
+            rs.getInt("edad"),
+            rs.getString("telefono")
+        );
+        Especialidad especialidad = new Especialidad(rs.getString("especialidad_nombre"), "");
+        Medico medico = new Medico(rs.getString("medico_nombre"), especialidad.getNombre());
+        LocalDate fecha = rs.getDate("fecha").toLocalDate();
+        LocalTime hora = rs.getTime("hora").toLocalTime();
+        Cita cita = new Cita(fecha, hora, paciente, medico);
+        cita.setConfirmada(rs.getBoolean("confirmada")); // 
+        return cita;
+    }
+
+    @Override
+    public void agregarHorarioMedico(Horario horario) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public boolean programarCita(Cita cita) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public boolean confirmarCita(int indice) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public boolean cancelarCita(int indice) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
 }
