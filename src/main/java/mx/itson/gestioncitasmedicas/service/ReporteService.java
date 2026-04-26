@@ -15,9 +15,9 @@ import java.util.List;
  */
 // ReporteService.java
 
-
 public class ReporteService implements IReporte {
 
+    @Override
     public String generarReporte(List<Cita> citas, String titulo) {
         StringBuilder sb = new StringBuilder();
         
@@ -38,12 +38,13 @@ public class ReporteService implements IReporte {
             sb.append("-".repeat(60)).append("\n");
 
             for (Cita c : citas) {
+                String estado = c.isConfirmada() ? "Confirmada" : "Pendiente"; 
                 sb.append(String.format("%-12s %-8s %-20s %-15s %s\n",
                     c.getFecha().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                     c.getHora().format(DateTimeFormatter.ofPattern("HH:mm")),
                     acortar(c.getMedico().getNombre(), 20),
                     acortar(c.getPaciente().getNombre(), 15),
-                    c.isConfirmada() ? "Confirmada" : "Pendiente"));
+                    estado));
             }
             
             sb.append("-".repeat(60)).append("\n");
@@ -51,7 +52,6 @@ public class ReporteService implements IReporte {
         }
         
         sb.append("\n").append("=".repeat(60)).append("\n");
-        
         return sb.toString();
     }
 
