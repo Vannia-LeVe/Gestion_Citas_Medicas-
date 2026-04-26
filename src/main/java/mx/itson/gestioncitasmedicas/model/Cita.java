@@ -29,11 +29,11 @@ public class Cita {
     public LocalTime getHora() { return hora; }
     public Paciente getPaciente() { return paciente; }
     public Medico getMedico() { return medico; }
-    public boolean isConfirmada() { return confirmada; }
+    public boolean isConfirmada() { return confirmada;}
 
     public void setFecha(LocalDate fecha) { this.fecha = fecha; }
     public void setHora(LocalTime hora) { this.hora = hora; }
-
+    public void setConfirmada(boolean confirmada) { this.confirmada = confirmada; } 
     public void confirmar() {
         this.confirmada = true;
         System.out.println("Cita confirmada para " + paciente.getNombre());
