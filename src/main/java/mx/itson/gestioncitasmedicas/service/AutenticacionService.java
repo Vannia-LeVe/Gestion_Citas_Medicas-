@@ -7,7 +7,7 @@ import mx.itson.gestioncitasmedicas.db.DatabaseConnection;
 import java.sql.*;
 /**
  *
- * @author Vanni
+ * @author Roberth
  */
 
 
